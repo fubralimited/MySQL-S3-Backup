@@ -12,11 +12,11 @@ Log in to AWS and find out your '''Access Key''' and '''Secret Keys''' here http
 
 ### Install S3 Command Tools
 As root
-    cd /etc/yum.repos.d
-    wget http://s3tools.org/repo/RHEL_6/s3tools.repo
-    yum install s3cmd
+	cd /etc/yum.repos.d
+	wget http://s3tools.org/repo/RHEL_6/s3tools.repo
+	yum install s3cmd
 Set up .s3cfg
-    s3cmd --configure
+	s3cmd --configure
 * Specify your Access Key and Secret Key
 * Leave encryption password blank (we will be using GPG later)
 * Use HTTPS
@@ -25,36 +25,36 @@ Set up .s3cfg
 You can either generate a new key pair, or import an existing key pair.
 #### Option 1 - Generate a new key pair
 Run the interactive key generation tool, and follow the on-screen instructions
-    gpg --gen-key
+	gpg --gen-key
 Whilst this process is running, you may need to run the following (on a different console) to generate entropy on the server:
-    find / -type f | xargs grep blahblahblha
+	find / -type f | xargs grep blahblahblha
 Check that the keys are installed
-    gpg --list-keys
+	gpg --list-keys
 The key should have ultimate trust by default, but you can check this in the edit key menu
-    gpg --edit-key 'Key Name'
+	gpg --edit-key 'Key Name'
 You can export the keys using the following...
-    gpg --export test@example.net > gpg_example_public.key
-    gpg --export-secret-keys test@example.net > gpg_example_private.key
+	gpg --export test@example.net > gpg_example_public.key
+	gpg --export-secret-keys test@example.net > gpg_example_private.key
 
 #### Option 2 - Import an existing key pair 
 
 Or if you have an already existing keypair, you can import them:
-    gpg --import public.key
-    gpg --import private.key
+	gpg --import public.key
+	gpg --import private.key
 
 View the ID of the public key and edit it to ultimate trust
-    gpg --list-keys
-    gpg --edit-key 12345678
+	gpg --list-keys
+	gpg --edit-key 12345678
 
-    Command> trust
-    ..
-    5 = I trust ultimately
-    m = back to the main menu
+	Command> trust
+	..
+	5 = I trust ultimately
+	m = back to the main menu
 
-    Your decision? 5
-    Do you really want to set this key to ultimate trust? (y/N) y
+	Your decision? 5
+	Do you really want to set this key to ultimate trust? (y/N) y
 
-    Command> save
+	Command> save
 
 ## Running backup script
 
