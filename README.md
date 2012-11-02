@@ -69,6 +69,29 @@ View the ID of the public key and edit it to ultimate trust:
 
 ## Running backup script
 
-* Get the ''mysql_s3_backup.php'' script and ''config.template.inc.php'' scripts on the server
-* Copy config.template.inc.php to config.inc.php and edit it appropriately.
-* Ensure that mysql and mysqldump can be run without a password prompt by editing the user's ~/.my.cnf file
+Install the git client, and php if necessary
+
+    yum install git php
+
+Add the timezone to php.ini
+
+    date.timezone = 'Europe/London'
+
+Checkout the MySQL-S3-Backup project
+
+    cd ~/
+    git clone https://github.com/fubralimited/MySQL-S3-Backup.git
+
+Copy config.template.inc.php to config.inc.php and edit it appropriately. You will need to specify at least your S3 Access key, and your GPG key recipient. You may also wish to list specific databases to backup in the db_where variable.
+
+    cd ~/MySQL-S3-Backup
+    cp config.template.inc.php config.inc.php
+    vim config.inc.php
+
+Ensure that mysql and mysqldump can be run without a password prompt by editing the user's ~/.my.cnf file
+
+    vim ~/.my.cnf
+    
+Try running the script!
+    
+
