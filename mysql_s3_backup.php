@@ -5,8 +5,8 @@
 // Modified for PHP and extended by Ben Kennish, October 2012
 
 //TODO: if a password is specified, create a temp config file and use 'mysql --defaults-file'
-
 //TODO: use mysqlhotcopy for MyISAM backups?
+//TODO: make sure errors go to STDERR and everything else to STDOUT (for cron)
 
 require_once(__DIR__.'/config.inc.php');
 
