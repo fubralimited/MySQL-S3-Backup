@@ -1,17 +1,13 @@
 # MySQL-S3-Backup
 
-A PHP script to backup MySQL databases to S3 using GPG for encryption
-
-## Copying config file
-
-Copy config.template.inc.php to config.inc.php and edit it accordingly.
+A PHP script to backup MySQL databases to Amazon S3 using GPG for encryption.
 
 ## Pre-requisites
 ### S3 Account
 Log in to AWS and find out your '''Access Key''' and '''Secret Keys''' here https://portal.aws.amazon.com/gp/aws/securityCredentials
 
 ### Install S3 Command Tools
-As root
+As root:
 
 	cd /etc/yum.repos.d
 	wget http://s3tools.org/repo/RHEL_6/s3tools.repo
@@ -28,7 +24,7 @@ Set up .s3cfg
 ### Setup GPG ###
 You can either generate a new key pair, or import an existing key pair.
 #### Option 1 - Generate a new key pair
-Run the interactive key generation tool, and follow the on-screen instructions
+Run the interactive key generation tool, and follow the on-screen instructions:
 
 	gpg --gen-key
 
@@ -36,15 +32,15 @@ Whilst this process is running, you may need to run the following (on a differen
 
 	find / -type f | xargs grep blahblahblha
 
-Check that the keys are installed
+Check that the keys are installed:
 
 	gpg --list-keys
 
-The key should have ultimate trust by default, but you can check this in the edit key menu
+The key should have ultimate trust by default, but you can check this in the edit key menu:
 
 	gpg --edit-key 'Key Name'
 
-You can export the keys using the following...
+You can export the keys using the following:
 
 	gpg --export test@example.net > gpg_example_public.key
 	gpg --export-secret-keys test@example.net > gpg_example_private.key
@@ -56,7 +52,7 @@ Or if you have an already existing keypair, you can import them:
 	gpg --import public.key
 	gpg --import private.key
 
-View the ID of the public key and edit it to ultimate trust
+View the ID of the public key and edit it to ultimate trust:
 
 	gpg --list-keys
 	gpg --edit-key 12345678
@@ -73,5 +69,6 @@ View the ID of the public key and edit it to ultimate trust
 
 ## Running backup script
 
-Get the ''mysql_s3_backup.php'' script on the server and get it running regularly via the cron.
-Ensure that mysql and mysqldump can be run without a password prompt by editing the user's ~/.my.cnf file
+* Get the ''mysql_s3_backup.php'' script and ''config.template.inc.php'' scripts on the server
+* Copy config.template.inc.php to config.inc.php and edit it appropriately.
+* Ensure that mysql and mysqldump can be run without a password prompt by editing the user's ~/.my.cnf file
