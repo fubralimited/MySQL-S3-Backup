@@ -93,8 +93,8 @@ Ensure that mysql and mysqldump can be run without a password prompt by editing 
     vim /root/.my.cnf
     
 Try running the script!
-    
-    php -f /root/MySQL-S3-Backup/mysql_s3_backup.php
+    chmod +x /root/MySQL-S3-Backup/mysql_s3_backup.php
+    /root/MySQL-S3-Backup/mysql_s3_backup.php
     
 If you are happy that it worked, install it on the cron
 
