@@ -94,4 +94,4 @@ Ensure that mysql and mysqldump can be run without a password prompt by editing 
     
 Try running the script!
     
-
+    php -f ~/MySQL-S3-Backup/mysql_s3_backup.php
