@@ -78,7 +78,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
     }
 
 
-    // create bucket if it doesn't exist
+    // create a new bucket if necessary
     $cmd = 's3cmd mb s3://'.$server['s3_bucket'];
     echo "Running: $cmd\n";
     system($cmd, $ret);
