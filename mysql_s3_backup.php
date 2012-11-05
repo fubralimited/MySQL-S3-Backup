@@ -95,7 +95,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
     
     if ($ret) 
     {
-        trigger_error('s3cmd returned '.$ret, E_USER_WARNING); // we quit out here and maintain the backups directory
+        trigger_error('s3cmd returned '.$ret, E_USER_WARNING);
         continue; //foreach
     }
 
