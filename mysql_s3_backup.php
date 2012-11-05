@@ -101,7 +101,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
     echo "S3 copy done.\n";
 
-    // Remove backups
+    // Remove local copy of backups
     echo "Removing backup dir ($this_backup_dir)\n";
     system('rm -rf '.$this_backup_dir, $ret);
     if ($ret) trigger_error('system() call returned '.$ret, E_USER_WARNING);
