@@ -67,6 +67,8 @@ foreach ($ms3b_cfg['Servers'] as $server)
                 'bzip2 -zc | '.
                 'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $this_backup_dir/$d.sql.bz2.e;".' echo ${PIPESTATUS[*]}';
         echo "Running: $cmd\n";
+
+        //TODO: change so the PIPESTATUS isn't visible?
         $pipe_res = system($cmd, $ret);
 
         if ($ret)
