@@ -2,10 +2,10 @@
 <?php
 
 // Based on vc-backup.pl & cb-backup.pl written by Mark Sutton, December 2011
-// Modified for PHP and extended by Ben Kennish, October 2012
+// Modified for PHP and extended by Ben Kennish, November 2012
 
 //TODO: if a password is specified, create a temp config file and use 'mysql --defaults-file'
-//TODO: use mysqlhotcopy for MyISAM backups?
+//TODO: use mysqlhotcopy for local MyISAM backups?
 //TODO: make sure errors go to STDERR and everything else to STDOUT (for cron)
 
 require_once(__DIR__.'/config.inc.php');
@@ -25,7 +25,7 @@ if (is_dir($ms3b_cfg['data_dir']))
 else
 {
     mkdir($ms3b_cfg['data_dir'], 0700, true)
-        or trigger_error('mkdir('.$ms3b_cfg['data_dir'].', 0700, true) failed', E_USER_ERROR);
+        or trigger_error('Failed to create '.$ms3b_cfg['data_dir'], E_USER_ERROR);
 }
 
 foreach ($ms3b_cfg['Servers'] as $server)
@@ -53,11 +53,40 @@ foreach ($ms3b_cfg['Servers'] as $server)
     mkdir($this_backup_dir, 0700, true)
         or trigger_error('Couldn\'t make '.$this_backup_dir, E_USER_ERROR);
 
+    if ($server['exec_pre'])
+    {
+        echo "Running: $server[exec_pre]\n";
+        system($server['exec_pre'], $ret);
+        if ($ret)
+            trigger_error("Warning: exec_pre returned $ret.\n", E_USER_WARNING);
+    }
+
+
+    //----------------------------------------------------------------------------------------
+    function exec_post_and_error($errno, $errstr, $errfile, $errline, $errcontext)
+    {
+        if ($errno == E_USER_ERROR)
+        {
+            global $server;
+            if ($server['exec_post'])
+            {
+                echo "Running: $server[exec_post]\n";
+                system($server['exec_post'], $ret);
+                if ($ret)
+                    echo("Warning: exec_post returned $ret\n");
+            }
+        }
+        return false; //pass through to default error handler
+    }
+    //----------------------------------------------------------------------------------------
+
+    set_error_handler('exec_post_and_error');
+
     // Back up the databases
     foreach ($databases as $d)
     {
         $d = trim($d);
-        if (!$d) trigger_error(E_USER_ERROR, '$d is false');
+        if (!$d) trigger_error('$d is false', E_USER_ERROR);
 
         // Do the backup
         echo "Backing up database: $d\n";
@@ -68,7 +97,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
                 'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $this_backup_dir/$d.sql.bz2.e;".' echo ${PIPESTATUS[*]}';
         echo "Running: $cmd\n";
 
-        //TODO: change so the PIPESTATUS isn't visible?
+        //TODO: change so the 'echo PIPESTATUS' bit isn't visible?
         $pipe_res = system($cmd, $ret);
 
         if ($ret)
@@ -78,6 +107,19 @@ foreach ($ms3b_cfg['Servers'] as $server)
             trigger_error('Pipe went bad (error codes: '.$pipe_res.' - aborting!', E_USER_ERROR);
 
     }
+
+    // return to default error handler
+    restore_error_handler();
+
+
+    if ($server['exec_post'])
+    {
+        echo "Running: $server[exec_post]\n";
+        system($server['exec_post'], $ret);
+        if ($ret)
+            trigger_error("Warning: exec_post returned $ret\n", E_USER_WARNING);
+    }
+    $server['exec_post'] = false;
 
 
     // create a new bucket if necessary

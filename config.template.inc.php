@@ -20,6 +20,8 @@ $ms3b_cfg['Servers'][$i]['s3_bucket'] = $ms3b_cfg['s3_key'].'.'.trim(`/bin/hostn
 $ms3b_cfg['Servers'][$i]['s3_dir']    = 'mysql-backups/';
 $ms3b_cfg['Servers'][$i]['gpg_rcpt']  = 'user@example.com';
 $ms3b_cfg['Servers'][$i]['gpg_sign']  = false;
+$ms3b_cfg['Servers'][$i]['exec_pre']  = '';  // what do we exec() before this backup
+$ms3b_cfg['Servers'][$i]['exec_post'] = '';  // what do we exec() after this backup
 $i++;
 
 // server 2, etc
