@@ -28,6 +28,8 @@ else
         or trigger_error('Failed to create '.$ms3b_cfg['data_dir'], E_USER_ERROR);
 }
 
+error_log('['.date('Y-m-d H:i:s')."] mysql_s3_backup starting\n", 3, $ms3b_cfg['log']);
+
 foreach ($ms3b_cfg['Servers'] as $server)
 {
     echo "Beginning backup (host:'$server[host]', user:'$server[user]')...\n";
@@ -104,7 +106,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
             trigger_error('system() call failed for: '.$cmd, E_USER_ERROR);
 
         if (!preg_match('/^0( 0)*$/', $pipe_res))
-            trigger_error('Pipe went bad (error codes: '.$pipe_res.' - aborting!', E_USER_ERROR);
+            trigger_error('Pipe went bad (error codes: '.$pipe_res.') - aborting!', E_USER_ERROR);
 
     }
 
@@ -151,3 +153,5 @@ foreach ($ms3b_cfg['Servers'] as $server)
     if ($ret) trigger_error('system() call returned '.$ret, E_USER_WARNING);
     echo "All done.\n";
 }
+
+error_log('['.date('Y-m-d H:i:s')."] mysql_s3_backup ended\n", 3, $ms3b_cfg['log']);

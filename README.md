@@ -71,9 +71,9 @@ View the ID of the public key and edit it to ultimate trust:
 
 Install the git client, and php if necessary
 
-    yum install git php
+    yum install git php-cli
 
-Add the timezone to php.ini
+Add the timezone to /etc/php.ini
 
     date.timezone = 'Europe/London'
 
