@@ -7,6 +7,7 @@
 //TODO: if a password is specified, create a temp config file and use 'mysql --defaults-file'
 //TODO: use mysqlhotcopy for local MyISAM backups?
 //TODO: make sure errors go to STDERR and everything else to STDOUT (for cron)
+//TODO: better logging and output control in general
 
 require_once(__DIR__.'/config.inc.php');
 
@@ -36,8 +37,9 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
     $now = date('Y-m-d_H.i.s');
 
+    // comment the next two lines out if u want to allow passwords to be shown in 'ps' output
     if ($server['password'])
-        trigger_error('Cannot use $server[password] - secure password functionality not implemented yet!', E_USER_ERROR);
+        trigger_error('Cannot use specified server password - secure password functionality not implemented yet!', E_USER_ERROR);
 
     $mysql_args = ($server['host'] ? "-h $server[host] " : '').
         ($server['user']     ? "-u $server[user] "    : '').
@@ -70,7 +72,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
         if ($errno == E_USER_ERROR)
         {
             global $server;
-            if ($server['exec_post'])
+            if (isset($server['exec_post']) && $server['exec_post'])
             {
                 echo "Running: $server[exec_post]\n";
                 system($server['exec_post'], $ret);
@@ -92,18 +94,28 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
         // Do the backup
         echo "Backing up database: $d\n";
+
+
+        error_log('['.date('Y-m-d H:i:s')."] Starting back up of database '$d'\n", 3, $ms3b_cfg['log']);
+
+
+        $dest_file = "$this_backup_dir/$d.sql.bz2.e";
+
         // NB: we use -B with --add-drop-database so we put DROP DATABASE, CREATE, USE .. stuff at start
         // --opt and -Q are defaults anyway 
         $cmd = '/usr/bin/mysqldump '.$mysql_args.'--opt -Q -B --add-drop-database '.$d.' | '.
                 'bzip2 -zc | '.
-                'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $this_backup_dir/$d.sql.bz2.e;".' echo ${PIPESTATUS[*]}';
+                'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $dest_file".'; echo ${PIPESTATUS[*]}';
         echo "Running: $cmd\n";
 
-        //TODO: change so the 'echo PIPESTATUS' bit isn't visible?
+        //TODO: change this so the 'echo PIPESTATUS' bit isn't visible?
         $pipe_res = system($cmd, $ret);
 
+        error_log('['.date('Y-m-d H:i:s').'] Finished. Resulting file is '.filesize($dest_file)." bytes\n", 3, $ms3b_cfg['log']);
+
+
         if ($ret)
-            trigger_error('system() call failed for: '.$cmd, E_USER_ERROR);
+            trigger_error('system() call returned error code '.$ret.' for: '.$cmd, E_USER_ERROR);
 
         if (!preg_match('/^0( 0)*$/', $pipe_res))
             trigger_error('Pipe went bad (error codes: '.$pipe_res.') - aborting!', E_USER_ERROR);
