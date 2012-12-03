@@ -21,7 +21,7 @@ $ms3b_cfg['Servers'][$i]['db_where']  = "NOT LIKE 'information_schema' AND \\`Da
 $ms3b_cfg['Servers'][$i]['s3_bucket'] = $ms3b_cfg['s3_key'].'.'.trim(`/bin/hostname`).'/';
 $ms3b_cfg['Servers'][$i]['s3_dir']    = 'mysql-backups/';
 $ms3b_cfg['Servers'][$i]['gpg_rcpt']  = 'user@example.com';
-$ms3b_cfg['Servers'][$i]['gpg_sign']  = false;
+$ms3b_cfg['Servers'][$i]['gpg_sign']  = true;
 $ms3b_cfg['Servers'][$i]['exec_pre']  = '';  // what do we exec() before this backup
 $ms3b_cfg['Servers'][$i]['exec_post'] = '';  // what do we exec() after this backup
 $i++;
