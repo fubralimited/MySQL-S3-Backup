@@ -1,2 +1,3 @@
 #config.inc.php is site specific, instead copy config.template.inc.php
 config.inc.php
+tmp/
