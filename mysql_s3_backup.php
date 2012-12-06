@@ -2,19 +2,40 @@
 <?php
 
 // Based on vc-backup.pl & cb-backup.pl written by Mark Sutton, December 2011
-// Modified for PHP and extended by Ben Kennish, November 2012
+// Modified for PHP and extended by Ben Kennish, November-December 2012
 
-//TODO: if a password is specified, create a temp config file and use 'mysql --defaults-file'
-//TODO: use mysqlhotcopy for local MyISAM backups?
-//TODO: make sure errors go to STDERR and everything else to STDOUT (for cron)
-//TODO: better logging and output control in general
+//FEATURE: if a password is specified, create a temp config file and use 'mysql --defaults-file'
+//FEATURE: use mysqlhotcopy for local MyISAM backups?
+//TIDY: make sure errors go to STDERR and everything else to STDOUT (for cron)
+//TIDY: better logging and output control in general
+//TIDY: stop showing the pipe error codes (e.g. 0 0 0)
+
+
+/*
+ * used as an error handler so that we run exec_post for the server before we die
+ */
+function exec_post_and_error($errno, $errstr, $errfile, $errline, $errcontext)
+{
+    if ($errno == E_USER_ERROR)
+    {
+        global $server;
+        if (isset($server['exec_post']) && $server['exec_post'])
+        {
+            echo "Running: $server[exec_post]\n";
+            system($server['exec_post'], $ret);
+            if ($ret)
+                echo("Warning: exec_post returned $ret\n");
+        }
+    }
+    return false; //pass through to default error handler
+}
+
+
+
 
 require_once(__DIR__.'/config.inc.php');
 
-
-if (!$_SERVER['HOME']) trigger_error('$_SERVER[HOME] is blank!', E_USER_ERROR);
-
-// give no perms to group/others on any files/dirs we create
+// paranoid mode - give no perms to group/others for any files/dirs we create
 umask(0077);
 
 // Make sure data_dir exists and is well protected
@@ -26,7 +47,7 @@ if (is_dir($ms3b_cfg['data_dir']))
 else
 {
     mkdir($ms3b_cfg['data_dir'], 0700, true)
-        or trigger_error('Failed to create '.$ms3b_cfg['data_dir'], E_USER_ERROR);
+        or trigger_error('Failed to create data_dir: '.$ms3b_cfg['data_dir'], E_USER_ERROR);
 }
 
 error_log('['.date('Y-m-d H:i:s')."] mysql_s3_backup starting\n", 3, $ms3b_cfg['log']);
@@ -46,7 +67,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
         ($server['password'] ? "-p$server[password] " : '');
 
     // Fetch databases from MySQL client
-    $cmd = 'echo "SHOW DATABASES WHERE \\`Database\\` '.$server['db_where'].'" | mysql '.$mysql_args.'--skip-column-names';
+    $cmd = "echo 'SHOW DATABASES WHERE $server[db_where]' | mysql $mysql_args --skip-column-names";
 
     echo "Fetching DB list. Cmd to exec() : $cmd\n";
     exec($cmd, $databases, $ret);
@@ -67,22 +88,6 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
 
     //----------------------------------------------------------------------------------------
-    function exec_post_and_error($errno, $errstr, $errfile, $errline, $errcontext)
-    {
-        if ($errno == E_USER_ERROR)
-        {
-            global $server;
-            if (isset($server['exec_post']) && $server['exec_post'])
-            {
-                echo "Running: $server[exec_post]\n";
-                system($server['exec_post'], $ret);
-                if ($ret)
-                    echo("Warning: exec_post returned $ret\n");
-            }
-        }
-        return false; //pass through to default error handler
-    }
-    //----------------------------------------------------------------------------------------
 
     set_error_handler('exec_post_and_error');
 
@@ -94,16 +99,35 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
         // Do the backup
         echo "Backing up database: $d\n";
+        $table_args = '';
 
+        if (isset($server['tables_where'][$d]) && $server['tables_where'][$d])
+        {
+            $cmd = "echo 'SHOW TABLES WHERE ".$server['tables_where'][$d]."' | mysql $mysql_args $d --skip-column-names";
+
+            echo "Selective backup chosen. Getting list of tables to backup. Cmd to exec() : $cmd\n";
+            exec($cmd, $tables, $ret);
+            if ($ret) trigger_error('exec() returned '.$ret, E_USER_ERROR);
+            
+            foreach ($tables as $table)
+            {
+                $table_args .= ' '.escapeshellarg($table);
+                echo "We will backup table: $table\n";
+            }
+        }
+        else
+        {
+            echo "Backing up all tables.\n";
+        }
 
         error_log('['.date('Y-m-d H:i:s')."] Starting back up of database '$d'\n", 3, $ms3b_cfg['log']);
 
 
         $dest_file = "$this_backup_dir/$d.sql.bz2.e";
 
-        // NB: we use -B with --add-drop-database so we put DROP DATABASE, CREATE, USE .. stuff at start
+        // NB: we used to use -B with --add-drop-database so we put DROP DATABASE, CREATE, USE .. stuff at start
         // --opt and -Q are defaults anyway 
-        $cmd = '/usr/bin/mysqldump '.$mysql_args.'--opt -Q -B --add-drop-database '.escapeshellarg($d).' | '.
+        $cmd = '/usr/bin/mysqldump '.$mysql_args.'--opt -Q '.escapeshellarg($d).' '.$table_args.'  | '.
                 'bzip2 -zc | '.
                 'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $dest_file".'; echo ${PIPESTATUS[*]}';
         echo "Running: $cmd\n";
