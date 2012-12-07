@@ -50,7 +50,7 @@ else
         or trigger_error('Failed to create data_dir: '.$ms3b_cfg['data_dir'], E_USER_ERROR);
 }
 
-error_log('['.date('Y-m-d H:i:s')."] mysql_s3_backup starting\n", 3, $ms3b_cfg['log']);
+error_log('['.date('Y-m-d H:i:s')."] ----- mysql_s3_backup starting\n", 3, $ms3b_cfg['log']);
 
 foreach ($ms3b_cfg['Servers'] as $server)
 {
@@ -171,6 +171,9 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
     // Copy new backup dir to S3
     echo "Copying backup $now to S3 bucket $server[s3_bucket] ($server[s3_dir])...\n";
+
+    error_log('['.date('Y-m-d H:i:s')."] Starting upload to Amazon S3 s3://$server[s3_bucket]$server[s3_dir]\n", 3, $ms3b_cfg['log']);
+
     $cmd = 'cd '.$ms3b_cfg['data_dir'].' && '.$ms3b_cfg['s3_cmd'] .' '.$now.' s3://'.$server['s3_bucket'].$server['s3_dir'];
     echo "Running: $cmd\n";
     system($cmd, $ret);
@@ -181,6 +184,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
         continue; //foreach
     }
 
+    error_log('['.date('Y-m-d H:i:s')."] S3 Upload complete\n", 3, $ms3b_cfg['log']);
     echo "S3 copy done.\n";
 
     // Remove local copy of backups
@@ -190,4 +194,4 @@ foreach ($ms3b_cfg['Servers'] as $server)
     echo "All done.\n";
 }
 
-error_log('['.date('Y-m-d H:i:s')."] mysql_s3_backup ended\n", 3, $ms3b_cfg['log']);
+error_log('['.date('Y-m-d H:i:s')."] ----- mysql_s3_backup ended\n", 3, $ms3b_cfg['log']);
