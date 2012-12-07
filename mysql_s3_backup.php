@@ -14,7 +14,7 @@
 /*
  * used as an error handler so that we run exec_post for the server before we die
  */
-function exec_post_and_error($errno, $errstr, $errfile, $errline, $errcontext)
+function on_error($errno, $errstr, $errfile, $errline, $errcontext)
 {
     if ($errno == E_USER_ERROR)
     {
@@ -89,7 +89,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
     //----------------------------------------------------------------------------------------
 
-    set_error_handler('exec_post_and_error');
+    set_error_handler('on_error');
 
     // Back up the databases
     foreach ($databases as $d)
@@ -127,7 +127,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
         // NB: we used to use -B with --add-drop-database so we put DROP DATABASE, CREATE, USE .. stuff at start
         // --opt and -Q are defaults anyway 
-        $cmd = '/usr/bin/mysqldump '.$mysql_args.'--opt -Q '.escapeshellarg($d).' '.$table_args.'  | '.
+        $cmd = 'mysqldump '.$mysql_args.'--opt -Q '.escapeshellarg($d).' '.$table_args.'  | '.
                 'bzip2 -zc | '.
                 'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $dest_file".'; echo ${PIPESTATUS[*]}';
         echo "Running: $cmd\n";
