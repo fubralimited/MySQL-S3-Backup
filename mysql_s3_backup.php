@@ -4,11 +4,15 @@
 // Based on vc-backup.pl & cb-backup.pl written by Mark Sutton, December 2011
 // Modified for PHP and extended by Ben Kennish, November-December 2012
 
+
+// == TODO List ==
+
 //FEATURE: if a password is specified, create a temp config file and use 'mysql --defaults-file'
 //FEATURE: use mysqlhotcopy for local MyISAM backups?
 //TIDY: make sure errors go to STDERR and everything else to STDOUT (for cron)
 //TIDY: better logging and output control in general
 //TIDY: stop showing the pipe error codes (e.g. 0 0 0)
+//TIDY: should we be using escapeshellarg() more?
 
 
 /*
@@ -29,8 +33,6 @@ function on_error($errno, $errstr, $errfile, $errline, $errcontext)
     }
     return false; //pass through to default error handler
 }
-
-
 
 
 require_once(__DIR__.'/config.inc.php');
