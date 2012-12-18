@@ -9,11 +9,11 @@
 
 //FEATURE: if a password is specified, create a temp config file and use 'mysql --defaults-file'
 //FEATURE: use mysqlhotcopy for local MyISAM backups?
+//FEATURE: allow selection of gzip instead of bzip2
 //TIDY: make sure errors go to STDERR and everything else to STDOUT (for cron)
 //TIDY: better logging and output control in general
 //TIDY: stop showing the pipe error codes (e.g. 0 0 0)
 //TIDY: should we be using escapeshellarg() more?
-
 
 /*
  * used as an error handler so that we run exec_post for the server before we die
@@ -122,15 +122,14 @@ foreach ($ms3b_cfg['Servers'] as $server)
             echo "Backing up all tables.\n";
         }
 
-        error_log('['.date('Y-m-d H:i:s')."] Starting back up of database '$d'\n", 3, $ms3b_cfg['log']);
+        $dest_file = "$this_backup_dir/$d.sql.gz.e";
 
-
-        $dest_file = "$this_backup_dir/$d.sql.bz2.e";
+        error_log('['.date('Y-m-d H:i:s')."] Starting back up of database '$d' to $dest_file\n", 3, $ms3b_cfg['log']);
 
         // NB: we used to use -B with --add-drop-database so we put DROP DATABASE, CREATE, USE .. stuff at start
         // --opt and -Q are defaults anyway 
-        $cmd = 'mysqldump '.$mysql_args.'--opt -Q '.escapeshellarg($d).' '.$table_args.'  | '.
-                'bzip2 -zc | '.
+        $cmd = 'mysqldump '.$mysql_args.'--opt -Q '.escapeshellarg($d).' '.$table_args.' | '.
+                'gzip -c | '.
                 'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $dest_file".'; echo ${PIPESTATUS[*]}';
         echo "Running: $cmd\n";
 
