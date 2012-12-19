@@ -7,9 +7,11 @@
 
 // == TODO List ==
 
+//FEATURE: allow selection of gzip instead of bzip2
+//FEATURE: support sending only a diff of the changes between last dump and current dump (to reduce backup sizes)
 //FEATURE: if a password is specified, create a temp config file and use 'mysql --defaults-file'
 //FEATURE: use mysqlhotcopy for local MyISAM backups?
-//FEATURE: allow selection of gzip instead of bzip2
+
 //TIDY: make sure errors go to STDERR and everything else to STDOUT (for cron)
 //TIDY: better logging and output control in general
 //TIDY: stop showing the pipe error codes (e.g. 0 0 0)
