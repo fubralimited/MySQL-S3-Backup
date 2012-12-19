@@ -131,7 +131,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
         // NB: we used to use -B with --add-drop-database so we put DROP DATABASE, CREATE, USE .. stuff at start
         // --opt and -Q are defaults anyway 
         $cmd = 'mysqldump '.$mysql_args.'--opt -Q '.escapeshellarg($d).' '.$table_args.' | '.
-                'gzip -c | '.
+                'gzip -c --best | '.
                 'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $dest_file".'; echo ${PIPESTATUS[*]}';
         echo "Running: $cmd\n";
 
