@@ -7,10 +7,10 @@
 
 // == TODO List ==
 
-//FEATURE: allow selection of gzip instead of bzip2
+//FEATURE: allow selection of gzip or bzip2
 //FEATURE: support sending only a diff of the changes between last dump and current dump (to reduce backup sizes)
-//FEATURE: if a password is specified, create a temp config file and use 'mysql --defaults-file'
-//FEATURE: use mysqlhotcopy for local MyISAM backups?
+//FEATURE: if a password is specified in config.inc.php, create a temp config file and use 'mysql --defaults-file'
+//FEATURE: option to use mysqlhotcopy for local MyISAM backups
 //FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all in one step (not 2 stages) - but then what to do on failure?
 
 //TIDY: make sure errors go to STDERR and everything else to STDOUT (for cron)
@@ -31,7 +31,7 @@ function on_error($errno, $errstr, $errfile, $errline, $errcontext)
             echo "Running: $server[exec_post]\n";
             system($server['exec_post'], $ret);
             if ($ret)
-                echo("Warning: exec_post returned $ret\n");
+                fwrite(STDERR, "Warning: exec_post ($server[exec_post]) returned $ret\n");
         }
     }
     return false; //pass through to default error handler
