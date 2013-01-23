@@ -100,3 +100,11 @@ Try running the script!
 If you are happy that it worked, install it on the cron
 
     echo '0 4 * * * root /root/MySQL-S3-Backup/mysql_s3_backup.php' > /etc/cron.d/mysql_s3_backup
+
+## Restoring backups
+
+Use s3cmd to download the backup from S3 then decrypt, unzip and import it in to MySQL.  e.g.
+
+    s3cmd get -r s3://ABCDEFGHJKLMN3OP2QRS.your.domain.example.com/mysql-backups/2013-01-21_02.42.01
+    cd 2013-01-21_02.42.01
+    gpg --decrypt database_name.sql.gz.e | gunzip -c | mysql database_name
