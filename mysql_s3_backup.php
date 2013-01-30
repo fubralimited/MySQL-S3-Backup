@@ -38,7 +38,7 @@ function on_error($errno, $errstr, $errfile, $errline, $errcontext)
 }
 
 
-require_once(__DIR__.'/config.inc.php');
+require_once(dirname(__FILE__).'/config.inc.php');
 
 // paranoid mode - give no perms to group/others for any files/dirs we create
 umask(0077);
