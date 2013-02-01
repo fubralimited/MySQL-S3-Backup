@@ -3,7 +3,7 @@
 
 // Based on vc-backup.pl & cb-backup.pl written by Mark Sutton, December 2011
 // Modified for PHP and extended by Ben Kennish, from November 2012
-// Looked at, criticised and then no contributions made back by Nicola Asuni, January 2013
+// Awaiting contributions from Nicola Asuni, January 2013
 
 // == TODO List ==
 
@@ -73,7 +73,7 @@ else
         or trigger_error('Failed to create data_dir: '.$ms3b_cfg['data_dir'], E_USER_ERROR);
 }
 
-error_log('['.date('Y-m-d H:i:s')."] ----- mysql_s3_backup starting\n", 3, $ms3b_cfg['log']);
+error_log('['.date('Y-m-d H:i:s')."] * mysql_s3_backup starting\n", 3, $ms3b_cfg['log']);
 
 foreach ($ms3b_cfg['Servers'] as $server)
 {
@@ -159,7 +159,6 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
         error_log('['.date('Y-m-d H:i:s').'] Finished. Resulting file is '.filesize($dest_file)." bytes\n", 3, $ms3b_cfg['log']);
 
-
         if ($ret)
             trigger_error('system() call returned error code '.$ret.' for: '.$cmd, E_USER_ERROR);
 
@@ -212,4 +211,4 @@ foreach ($ms3b_cfg['Servers'] as $server)
     echo "All done.\n";
 }
 
-error_log('['.date('Y-m-d H:i:s')."] ----- mysql_s3_backup ended\n", 3, $ms3b_cfg['log']);
+error_log('['.date('Y-m-d H:i:s')."] * mysql_s3_backup ended normally\n", 3, $ms3b_cfg['log']);
