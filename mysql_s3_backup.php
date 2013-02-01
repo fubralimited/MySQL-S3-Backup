@@ -2,8 +2,8 @@
 <?php
 
 // Based on vc-backup.pl & cb-backup.pl written by Mark Sutton, December 2011
-// Modified for PHP and extended by Ben Kennish, November-December 2012
-
+// Modified for PHP and extended by Ben Kennish, from November 2012
+// Looked at, criticised and then no contributions made back by Nicola Asuni, January 2013
 
 // == TODO List ==
 
@@ -11,7 +11,7 @@
 //FEATURE: support sending only a diff of the changes between last dump and current dump (to reduce backup sizes)
 //FEATURE: if a password is specified in config.inc.php, create a temp config file and use 'mysql --defaults-file'
 //FEATURE: option to use mysqlhotcopy for local MyISAM backups
-//FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all in one step (not 2 stages) - but then what to do on failure?
+//FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all in one piped command - but then what can we do on failure?
 
 //TIDY: make sure errors go to STDERR and everything else to STDOUT (for cron)
 //TIDY: better logging and output control in general
@@ -23,10 +23,11 @@
  */
 function on_error($errno, $errstr, $errfile, $errline, $errcontext)
 {
+    // run exec_post script on a full error
     if ($errno == E_USER_ERROR)
     {
         global $server;
-        if (isset($server['exec_post']) && $server['exec_post'])
+        if (isset($server) && isset($server['exec_post']) && $server['exec_post'])
         {
             echo "Running: $server[exec_post]\n";
             system($server['exec_post'], $ret);
@@ -34,11 +35,28 @@ function on_error($errno, $errstr, $errfile, $errline, $errcontext)
                 fwrite(STDERR, "Warning: exec_post ($server[exec_post]) returned $ret\n");
         }
     }
-    return false; //pass through to default error handler
+
+    // write an entry to the log
+    global $ms3b_cfg;
+
+    $error_types = array( E_WARNING => 'Warning',
+                          E_NOTICE => 'Notice',
+                          E_USER_ERROR => 'User Error',
+                          E_USER_WARNING => 'User Warning',
+                          E_USER_NOTICE => 'User Notice',
+                        );
+    $err_name = (isset($error_types[$errno])) ? $error_types[$errno] : "Error type '$errno'";
+
+    error_log('['.date('Y-m-d H:i:s')."] $err_name - $errstr (line $errline in $errfile)\n", 3, $ms3b_cfg['log']);
+
+    return false; //pass through to PHP's default error handler
 }
 
 
+
 require_once(dirname(__FILE__).'/config.inc.php');
+
+set_error_handler('on_error');
 
 // paranoid mode - give no perms to group/others for any files/dirs we create
 umask(0077);
@@ -94,7 +112,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
     //----------------------------------------------------------------------------------------
 
-    set_error_handler('on_error');
+    
 
     // Back up the databases
     foreach ($databases as $d)
@@ -150,10 +168,6 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
     }
 
-    // return to default error handler
-    restore_error_handler();
-
-
     if ($server['exec_post'])
     {
         echo "Running: $server[exec_post]\n";
@@ -185,7 +199,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
     if ($ret) 
     {
         trigger_error('s3cmd returned '.$ret, E_USER_WARNING);
-        continue; //foreach
+        continue; //foreach (skip local delete)
     }
 
     error_log('['.date('Y-m-d H:i:s')."] S3 Upload complete\n", 3, $ms3b_cfg['log']);
