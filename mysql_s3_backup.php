@@ -12,6 +12,7 @@
 //FEATURE: if a password is specified in config.inc.php, create a temp config file and use 'mysql --defaults-file'
 //FEATURE: option to use mysqlhotcopy for local MyISAM backups
 //FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all in one piped command - but then what can we do on failure?
+//FEATURE: gracefully handle views with invalid references, e.g. use --force with mysqldump then don't die on non-zero pipe status code
 
 //TIDY: make sure errors go to STDERR and everything else to STDOUT (for cron)
 //TIDY: better logging and output control in general
@@ -149,7 +150,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
         // NB: we used to use -B with --add-drop-database so we put DROP DATABASE, CREATE, USE .. stuff at start
         // --opt and -Q are defaults anyway 
-        $cmd = 'mysqldump --force '.$mysql_args.'--opt -Q '.escapeshellarg($d).' '.$table_args.' | '.
+        $cmd = 'mysqldump '.$mysql_args.'--opt -Q '.escapeshellarg($d).' '.$table_args.' | '.
                 'gzip -c | '.
                 'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $dest_file".'; echo ${PIPESTATUS[*]}';
         echo "Running: $cmd\n";
