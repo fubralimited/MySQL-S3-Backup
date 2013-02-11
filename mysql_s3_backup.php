@@ -93,6 +93,9 @@ foreach ($ms3b_cfg['Servers'] as $server)
     // Fetch databases from MySQL client
     $cmd = "echo 'SHOW DATABASES WHERE $server[db_where]' | mysql $mysql_args --skip-column-names";
 
+    // unset $databases otherwise exec() appends to the end of it
+    unset($databases);
+
     echo "Fetching DB list. Cmd to exec() : $cmd\n";
     exec($cmd, $databases, $ret);
     if ($ret) trigger_error('exec() returned '.$ret, E_USER_ERROR);
@@ -195,15 +198,15 @@ foreach ($ms3b_cfg['Servers'] as $server)
     $cmd = 'cd '.$ms3b_cfg['data_dir'].' && '.$ms3b_cfg['s3_cmd'] .' '.$now.' s3://'.$server['s3_bucket'].$server['s3_dir'];
     echo "Running: $cmd\n";
     system($cmd, $ret);
+
+    error_log('['.date('Y-m-d H:i:s')."] S3 Upload complete\n", 3, $ms3b_cfg['log']);
+    echo "S3 copy done.\n";
     
     if ($ret) 
     {
         trigger_error('s3cmd returned '.$ret, E_USER_WARNING);
         continue; //foreach (skip local delete)
     }
-
-    error_log('['.date('Y-m-d H:i:s')."] S3 Upload complete\n", 3, $ms3b_cfg['log']);
-    echo "S3 copy done.\n";
 
     // Remove local copy of backups
     echo "Removing backup dir ($this_backup_dir)\n";
