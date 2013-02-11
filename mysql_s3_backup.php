@@ -133,6 +133,10 @@ foreach ($ms3b_cfg['Servers'] as $server)
             $cmd = "echo 'SHOW TABLES WHERE ".$server['tables_where'][$d]."' | mysql $mysql_args $d --skip-column-names";
 
             echo "Selective backup chosen. Getting list of tables to backup. Cmd to exec() : $cmd\n";
+
+            // unset $tables otherwise exec() appends to the end of it
+            unset($tables);
+
             exec($cmd, $tables, $ret);
             if ($ret) trigger_error('exec() returned '.$ret, E_USER_ERROR);
             
@@ -210,6 +214,10 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
     // Remove local copy of backups
     echo "Removing backup dir ($this_backup_dir)\n";
+
+    // sanity check
+    if (realpath($this_backup_dir) == '/') trigger_error('Refusing to wipe entire filesystem!', E_USER_ERROR);
+
     system('rm -rf '.$this_backup_dir, $ret);
     if ($ret) trigger_error('system() call returned '.$ret, E_USER_WARNING);
     echo "All done.\n";
