@@ -13,11 +13,13 @@
 //FEATURE: option to use mysqlhotcopy for local MyISAM backups
 //FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all in one piped command - but then what can we do on failure?
 //FEATURE: gracefully handle views with invalid references, e.g. use --force with mysqldump then don't die on non-zero pipe status code
+//FEATURE: option to produce a report (in XML?) listing backups and the size and time taken for backups and to upload to S3
 
 //TIDY: make sure errors go to STDERR and everything else to STDOUT (for cron)
 //TIDY: better logging and output control in general
 //TIDY: stop showing the pipe error codes (e.g. 0 0 0)
 //TIDY: should we be using escapeshellarg() more?
+//TIDY: don't run exec_post if we haven't run exec_pre ?
 
 /*
  * used as an error handler so that we run exec_post for the server before we die
