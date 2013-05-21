@@ -55,7 +55,7 @@ Or if you have an already existing keypair, you can import them:
 View the ID of the public key and edit it to ultimate trust:
 
 	gpg --list-keys
-	gpg --edit-key 12345678
+	gpg --edit-key (uid obtained from gpg --list-keys e.g.server@domain.com)
 
 	Command> trust
 	..
