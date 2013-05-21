@@ -73,6 +73,11 @@ Install the git client, and php if necessary
 
     yum install git php-cli
 
+If git is not available install EPEL packages
+
+    rpm -Uvh http://dl.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm
+    yum install git
+
 Add the timezone to /etc/php.ini
 
     date.timezone = 'Europe/London'
