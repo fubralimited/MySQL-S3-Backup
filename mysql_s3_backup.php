@@ -88,6 +88,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
     if ($server['password'])
         trigger_error('Cannot use specified server password - secure password functionality not implemented yet!', E_USER_ERROR);
 
+    // set the mysql args (common to both mysql and mysqldump)
     $mysql_args = ($server['host'] ? "-h $server[host] " : '').
         ($server['user']     ? "-u $server[user] "    : '').
         ($server['password'] ? "-p$server[password] " : '');
@@ -157,9 +158,9 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
         error_log('['.date('Y-m-d H:i:s')."] Starting back up of database '$d' to $dest_file\n", 3, $ms3b_cfg['log']);
 
-        // NB: we used to use -B with --add-drop-database so we put DROP DATABASE, CREATE, USE .. stuff at start
+        // NB: we used to use -B with --add-drop-database so we put DROP DATABASE, CREATE, USE .. stuff at start (but now we don't)
         // --opt and -Q are defaults anyway 
-        $cmd = 'mysqldump '.$mysql_args.'--opt -Q '.escapeshellarg($d).' '.$table_args.' | '.
+        $cmd = 'mysqldump '.$mysql_args.'--opt -Q '.$ms3b_cfg['mysqldump_args'].' '.escapeshellarg($d).' '.$table_args.' | '.
                 'gzip -c | '.
                 'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $dest_file".'; echo ${PIPESTATUS[*]}';
         echo "Running: $cmd\n";
