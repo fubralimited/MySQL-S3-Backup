@@ -9,7 +9,7 @@ $ms3b_cfg['s3_key']   = 'ABCDEFGHIJKLMNOP';
 $ms3b_cfg['s3_cmd']   = 's3cmd put -r';
 $ms3b_cfg['data_dir'] = $_SERVER['HOME'].'/.ms3b';
 $ms3b_cfg['log'] = '/tmp/mysql_s3_backup.log';
-$ms3b_cfg['mysqldump_args'] = '--events';
+$ms3b_cfg['mysqldump_args'] = '--events --force';
 
 $i = 0;
 

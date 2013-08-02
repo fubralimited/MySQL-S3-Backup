@@ -171,10 +171,10 @@ foreach ($ms3b_cfg['Servers'] as $server)
         error_log('['.date('Y-m-d H:i:s').'] Finished. Resulting file is '.filesize($dest_file)." bytes\n", 3, $ms3b_cfg['log']);
 
         if ($ret)
-            trigger_error('system() call returned error code '.$ret.' for: '.$cmd, E_USER_ERROR);
+            trigger_error('system() call returned error code '.$ret.' for: '.$cmd, E_USER_WARNING);
 
         if (!preg_match('/^0( 0)*$/', $pipe_res))
-            trigger_error('Pipe went bad (error codes: '.$pipe_res.') - aborting!', E_USER_ERROR);
+            trigger_error('Pipe went bad (error codes: '.$pipe_res.')!', E_USER_WARNING);
 
     }
 
