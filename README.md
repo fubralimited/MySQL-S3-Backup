@@ -4,13 +4,18 @@ A PHP script to backup MySQL databases to Amazon S3 using GPG for encryption.
 
 ## Pre-requisites
 ### S3 Account
-Log in to AWS and find out your '''Access Key''' and '''Secret Keys''' here https://portal.aws.amazon.com/gp/aws/securityCredentials
+Log in to AWS and find out your '''Access Key''' and '''Secret Keys''' here: https://portal.aws.amazon.com/gp/aws/securityCredentials
 
 ### Install S3 Command Tools
 As root:
 
 	cd /etc/yum.repos.d
-	wget http://s3tools.org/repo/RHEL_6/s3tools.repo
+
+       (For RHEL5.x based OS...)
+        wget http://s3tools.org/repo/RHEL_5/s3tools.repo 
+       (For RHEL6.x based OS...)
+        wget http://s3tools.org/repo/RHEL_6/s3tools.repo 
+
 	yum install s3cmd
 
 Set up .s3cfg
@@ -74,8 +79,12 @@ Install the git client, and php if necessary
     yum install git php-cli
 
 If git is not available install EPEL packages
+    
+    (For RHEL5.x based OS...)
+     rpm -Uvh http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm
+    (For RHEL6.x based OS...)
+     rpm -Uvh http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
 
-    rpm -Uvh http://dl.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm
     yum install git
 
 Add the timezone to /etc/php.ini
@@ -93,10 +102,16 @@ Copy config.template.inc.php to config.inc.php and edit it appropriately. You wi
     cp config.template.inc.php config.inc.php
     vim config.inc.php
 
-Ensure that mysql and mysqldump can be run without a password prompt by editing the user's ~/.my.cnf file
+Ensure that mysql and mysqldump can be run without a password prompt by editing the users ~/.my.cnf file
 
     vim /root/.my.cnf
     
+You will probably need lines like:
+
+[client]
+user=root
+password=y0uR_p455w0rd_H3r3
+
 Try running the script!
 
     chmod +x /root/MySQL-S3-Backup/mysql_s3_backup.php
@@ -104,7 +119,10 @@ Try running the script!
     
 If you are happy that it worked, install it on the cron
 
-    echo '0 4 * * * root /root/MySQL-S3-Backup/mysql_s3_backup.php' > /etc/cron.d/mysql_s3_backup
+    cat <<'EOF' > /etc/cron.d/mysql_s3_backup
+    > MAILTO=your@email.address.com
+    > 42 2 * * * root /root/MySQL-S3-Backup/mysql_s3_backup.php
+    > EOF
 
 ## Restoring backups
 
@@ -113,3 +131,12 @@ Use s3cmd to download the backup from S3 then decrypt, unzip and import it in to
     s3cmd get -r s3://ABCDEFGHJKLMN3OP2QRS.your.domain.example.com/mysql-backups/2013-01-21_02.42.01
     cd 2013-01-21_02.42.01
     gpg --decrypt database_name.sql.gz.e | gunzip -c | mysql database_name
+
+This will download the specified backup, decrypt and decompress the named database backup and then 
+import it into the MySQL server. The database should exist already. If it does not, run this beforehand:
+
+    mysqladmin create database_name
+
+If you have any further questions/suggestions/whatever, feel free to email me (ben@fubra.com).
+
+Thanks.
