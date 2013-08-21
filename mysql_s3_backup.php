@@ -189,6 +189,9 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
 
     // create a new bucket if necessary
+    // we no longer do this since we weren't autocreating the destination directory anyway
+    // and this now produces an error and terminates if the bucket already exists
+    /*
     $cmd = 's3cmd mb s3://'.$server['s3_bucket'];
     echo "Running: $cmd\n";
     system($cmd, $ret);
@@ -196,13 +199,14 @@ foreach ($ms3b_cfg['Servers'] as $server)
     {
         trigger_error('s3cmd returned '.$ret, E_USER_ERROR);
     }
+    */
 
     // Copy new backup dir to S3
     echo "Copying backup $now to S3 bucket $server[s3_bucket] ($server[s3_dir])...\n";
 
     error_log('['.date('Y-m-d H:i:s')."] Starting upload to Amazon S3 s3://$server[s3_bucket]$server[s3_dir]\n", 3, $ms3b_cfg['log']);
 
-    $cmd = 'cd '.$ms3b_cfg['data_dir'].' && '.$ms3b_cfg['s3_cmd'] .' '.$now.' s3://'.$server['s3_bucket'].$server['s3_dir'];
+    $cmd = 'cd '.$ms3b_cfg['data_dir'].' && '.$ms3b_cfg['s3_cmd'] .' --no-encrypt '.$now.' s3://'.$server['s3_bucket'].$server['s3_dir'];
     echo "Running: $cmd\n";
     system($cmd, $ret);
 
