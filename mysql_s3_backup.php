@@ -14,6 +14,7 @@
 //FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all in one piped command - but then what can we do on failure?
 //FEATURE: gracefully handle views with invalid references, e.g. use --force with mysqldump then don't die on non-zero pipe status code
 //FEATURE: option to produce a report (in XML?) listing backups and the size and time taken for backups and to upload to S3
+//FEATURE: option to enable/disable gpg and to enable/disable the S3 upload (for taking backups to use in another fashion)
 
 //TIDY: make sure errors go to STDERR and everything else to STDOUT (for cron)
 //TIDY: better logging and output control in general
