@@ -12,15 +12,14 @@
 //FEATURE: if a password is specified in config.inc.php, create a temp config file and use 'mysql --defaults-file'
 //FEATURE: option to use mysqlhotcopy for local MyISAM backups
 //FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all in one piped command - but then what can we do on failure?
-//FEATURE: gracefully handle views with invalid references, e.g. use --force with mysqldump then don't die on non-zero pipe status code
 //FEATURE: option to produce a report (in XML?) listing backups and the size and time taken for backups and to upload to S3
 //FEATURE: option to enable/disable gpg and to enable/disable the S3 upload (for taking backups to use in another fashion)
 
 //TIDY: make sure errors go to STDERR and everything else to STDOUT (for cron)
 //TIDY: better logging and output control in general
-//TIDY: stop showing the pipe error codes (e.g. 0 0 0)
+//TIDY: stop displaying the pipe error codes (e.g. 0 0 0)
 //TIDY: should we be using escapeshellarg() more?
-//TIDY: don't run exec_post if we haven't run exec_pre ?
+//TIDY: don't run exec_post if we haven't run exec_pre
 
 /*
  * used as an error handler so that we run exec_post for the server before we die
@@ -159,8 +158,10 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
         error_log('['.date('Y-m-d H:i:s')."] Starting back up of database '$d' to $dest_file\n", 3, $ms3b_cfg['log']);
 
-        // NB: we used to use -B with --add-drop-database so we put DROP DATABASE, CREATE, USE .. stuff at start (but now we don't)
-        // --opt and -Q are defaults anyway 
+        // NB: we used to use -B with --add-drop-database so we put DROP DATABASE, CREATE, USE .. stuff at start (but now we don't - can't remember why)
+        // --opt and -Q are defaults anyway but we add them "just in cases"
+        
+        // if u run "set -o pipefail" then a pipe will return the rightmost non-zero error code - perhaps we could use this here rather than PIPESTATUS?
         $cmd = 'mysqldump '.$mysql_args.'--opt -Q '.$ms3b_cfg['mysqldump_args'].' '.escapeshellarg($d).' '.$table_args.' | '.
                 'gzip -c | '.
                 'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $dest_file".'; echo ${PIPESTATUS[*]}';
@@ -190,6 +191,10 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
 
     // create a new bucket if necessary
+    // we no longer do this since we weren't autocreating the destination directory anyway
+    // and this now produces an error and terminates if the bucket already exists
+    // TODO: we could test for presence of bucket and then create it if necessary
+    /*
     $cmd = 's3cmd mb s3://'.$server['s3_bucket'];
     echo "Running: $cmd\n";
     system($cmd, $ret);
@@ -197,13 +202,14 @@ foreach ($ms3b_cfg['Servers'] as $server)
     {
         trigger_error('s3cmd returned '.$ret, E_USER_ERROR);
     }
+    */
 
     // Copy new backup dir to S3
     echo "Copying backup $now to S3 bucket $server[s3_bucket] ($server[s3_dir])...\n";
 
     error_log('['.date('Y-m-d H:i:s')."] Starting upload to Amazon S3 s3://$server[s3_bucket]$server[s3_dir]\n", 3, $ms3b_cfg['log']);
 
-    $cmd = 'cd '.$ms3b_cfg['data_dir'].' && '.$ms3b_cfg['s3_cmd'] .' '.$now.' s3://'.$server['s3_bucket'].$server['s3_dir'];
+    $cmd = 'cd '.$ms3b_cfg['data_dir'].' && '.$ms3b_cfg['s3_cmd'] .' --no-encrypt '.$now.' s3://'.$server['s3_bucket'].$server['s3_dir'];
     echo "Running: $cmd\n";
     system($cmd, $ret);
 
