@@ -3,7 +3,7 @@
 
 // Based on vc-backup.pl & cb-backup.pl written by Mark Sutton, December 2011
 // Modified for PHP and extended by Ben Kennish, from November 2012
-// Awaiting contributions from Nicola Asuni, January 2013
+// Awaiting contributions from Nicola Asuni, January 2013, that will sadly never come ;-(
 
 // == TODO List ==
 
@@ -20,6 +20,7 @@
 //TIDY: stop displaying the pipe error codes (e.g. 0 0 0)
 //TIDY: should we be using escapeshellarg() more?
 //TIDY: don't run exec_post if we haven't run exec_pre
+//TIDY: change .e to .gpg as this is the convention (see http://lists.gnupg.org/pipermail/gnupg-users/2008-July/033898.html)
 
 /*
  * used as an error handler so that we run exec_post for the server before we die
