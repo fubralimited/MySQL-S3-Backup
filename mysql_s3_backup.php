@@ -22,6 +22,8 @@
 //TIDY: don't run exec_post if we haven't run exec_pre
 //TIDY: change .e to .gpg as this is the convention (see http://lists.gnupg.org/pipermail/gnupg-users/2008-July/033898.html)
 
+//TIDY: cat /dev/null | s3cmd    to stop it reading from STDIN? or does PHP do that anyway?
+
 /*
  * used as an error handler so that we run exec_post for the server before we die
  */
