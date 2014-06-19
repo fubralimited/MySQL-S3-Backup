@@ -15,9 +15,9 @@ $ms3b_cfg['mysqldump_args'] = '--events --force';
 $i = 0;
 
 // server 1
-$ms3b_cfg['Servers'][$i]['host']      = '';
-$ms3b_cfg['Servers'][$i]['user']      = '';				
-$ms3b_cfg['Servers'][$i]['password']  = ''; // NOT recommended to put password here as then it will appear in 'ps' listing .. better to specify password in '~/.my.cnf' file
+$ms3b_cfg['Servers'][$i]['host']      = '';  // if any of these three are undefined
+$ms3b_cfg['Servers'][$i]['user']      = '';	 // mysql and mysqldump will use the values in /etc/my.cnf			
+$ms3b_cfg['Servers'][$i]['password']  = '';  // and /root/.my.cnf
 $ms3b_cfg['Servers'][$i]['db_where']  = '`Database` NOT LIKE "information_schema" AND `Database` NOT LIKE "performance_schema"';
 //$ms3b_cfg['Servers'][$i]['tables_where']['database_name'] = '`Tables_in_database_name` NOT LIKE "temp_%"';
 $ms3b_cfg['Servers'][$i]['s3_bucket'] = 'ABCDEFGHIJKLMNOP.'.trim(`/bin/hostname`).'/';
