@@ -60,7 +60,7 @@ pcntl_signal(SIGUSR1, "sig_handler");
 function on_shutdown()
 {
     global $clean_shutdown, $server;
-    
+
     if (!$clean_shutdown)
     {
         trigger_error('Unclean shutdown!', E_USER_WARNING);
@@ -74,7 +74,7 @@ function on_shutdown()
             trigger_error("Warning: exec_post ($server[exec_post]) returned $ret", E_USER_WARNING);
     }
 
-    log_notice("on_shutdown() complete. Goodbye!");
+    log_notice('on_shutdown() complete. Goodbye!');
 }
 
 
@@ -96,8 +96,7 @@ register_shutdown_function('on_shutdown');
 
 ini_set('log_errors', 1);
 ini_set('error_log', $ms3b_cfg['log']);
-ini_set('display_errors', 1);
-
+ini_set('display_errors', 1);   // display errors on STDERR
 
 // paranoid mode - give no perms to group/others for any files/dirs we create
 umask(0077);
@@ -118,7 +117,8 @@ else
 if (empty($ms3b_cfg['compressor_cmd']))
     trigger_error('No compressor_cmd set in config', E_USER_ERROR);
 
-log_notice("mysql_s3_backup starting");
+log_notice('mysql_s3_backup starting');
+
 
 foreach ($ms3b_cfg['Servers'] as $server)
 {
@@ -127,7 +127,6 @@ foreach ($ms3b_cfg['Servers'] as $server)
     $now = date('Y-m-d_H.i.s');
     $my_cnf = '';
 
-    // comment the next two lines out if u want to allow passwords to be shown in 'ps' output (NOT RECOMMENDED)
     if (!empty($server['password']))
     {
         $my_cnf = '/tmp/ms3b-my.cnf';
@@ -140,14 +139,12 @@ foreach ($ms3b_cfg['Servers'] as $server)
             trigger_error("Couldn't write password to $my_cnf. Skipping backup of this server", E_USER_WARNING);
             continue;
         }
-
     }
 
     // set the mysql args (common to both mysql (the client) and mysqldump)
     $mysql_args = ($my_cnf ? "--defaults-file=$my_cnf " : '').
         ($server['host'] ? "-h $server[host] " : '').
         ($server['user'] ? "-u $server[user] " : '');
-        
 
     // Fetch list of databases from MySQL client
     $cmd = "mysql $mysql_args --batch --skip-column-names -e 'SHOW DATABASES WHERE $server[db_where]' < /dev/null";
@@ -174,11 +171,10 @@ foreach ($ms3b_cfg['Servers'] as $server)
         {
             trigger_error("Warning: exec_pre returned $ret.\n", E_USER_WARNING);
 
-            // uncomment this if u want exec_pre failure to stop exec_post from running
+            // uncomment this if u don't want exec_post to run on an exec_pre failure
             //$server['exec_post'] = '';
         }
         pcntl_signal_dispatch();
-        // should we continue; to next server here?  or should we ensure we don't run exec_post at end?
     }
 
     //----------------------------------------------------------------------------------------
@@ -204,7 +200,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
             exec($cmd, $tables, $ret);
             if ($ret) trigger_error('exec() returned '.$ret, E_USER_ERROR);
-            
+
             foreach ($tables as $table)
             {
                 $table_args .= ' '.escapeshellarg($table);
@@ -230,15 +226,19 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
         // "set -o pipefail" in bash means that a pipe will return the rightmost non-zero error code (or zero if no errors)
         // although --opt and --quote-names are defaults anyway, we specify them explicitly anyway "just in cases"
-        $cmd = '(set -o pipefail && mysqldump '.$mysql_args.'--opt --quote-names '.$ms3b_cfg['mysqldump_args'].' '.$other_args.escapeshellarg($d).' '.$table_args.' | '.
+        $cmd = '(set -o pipefail && '.
+                "mysqldump $mysql_args --opt --quote-names $ms3b_cfg[mysqldump_args] $other_args".escapeshellarg($d)." $table_args | ".
                 $ms3b_cfg['compressor_cmd'].' | '.
-                'gpg -e '.($server['gpg_sign'] ? '-s ' : '').'-r '.$server['gpg_rcpt']." > $dest_file".
-                ') < /dev/null';
+                'gpg --encrypt --trust-model always --recipient '.$server['gpg_rcpt'].' '.
+                    ($server['gpg_sign'] ?
+                        ('--sign '.($server['gpg_signer'] ? '--default-key '.$server['gpg_signer'].' ' : ''))
+                        : '').
+                '  > $dest_file ) < /dev/null';
+
         log_notice("Running: $cmd");
-        
+
         $ret = 0;
         system($cmd, $ret);
-        
 
         if ($ret)
         {
@@ -284,20 +284,19 @@ foreach ($ms3b_cfg['Servers'] as $server)
     $cmd = 'cd '.$ms3b_cfg['data_dir'].' && '.$ms3b_cfg['s3_cmd'] .' --no-encrypt '.$now.' s3://'.$server['s3_bucket'].$server['s3_dir'].' < /dev/null';
     log_notice("Running: $cmd");
     system($cmd, $ret);
-    
+    pcntl_signal_dispatch();
+
     if ($ret)
     {
         //TODO: i don't think we are ever reaching this part - I think s3cmd might never return a non-zero error code
         trigger_error('s3cmd returned '.$ret.' - skipping delete of local files', E_USER_WARNING);
-        pcntl_signal_dispatch();
         continue; //foreach (skip local delete)
     }
-    pcntl_signal_dispatch();
 
     log_notice("S3 Upload complete. Removing backup dir ($this_backup_dir)");
 
     // sanity check
-    if (realpath($this_backup_dir) == '/') 
+    if (realpath($this_backup_dir) == '/')
         trigger_error('Refusing to wipe entire filesystem!', E_USER_ERROR);
 
     system('rm -rf '.$this_backup_dir, $ret);
