@@ -3,18 +3,15 @@
 # die on non-zero return codes
 set -e 
 
-# echo on!
-#set -x
-
-# script to restore all specified database backups (*.sql.gz.e)
+# script to restore all specified database backups (*.sql.gz.gpg)
 
 if [ $# -lt 1 ]
 then
    echo "Script to quickly restore backup files made by mysql_s3_backup.php"
    echo
-   echo "Usage: $0 file1.sql.gz.e [file2.sql.gz.e] ..."
+   echo "Usage: $0 file1.sql.gz.gpg [file2.sql.gz.gpg] ..."
    echo
-   echo "If you want to restore all, try $0 *.sql.gz.e"
+   echo "If you want to restore all, try $0 *.sql.gz.gpg"
    exit 1
 fi
 

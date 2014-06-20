@@ -128,7 +128,7 @@ Try running the script!
 
 If you are happy that it worked, install it on the cron
 
-    cat <<'EOF' > /etc/cron.d/ms3b
+    cat <<EOF > /etc/cron.d/ms3b
     > MAILTO=you@example.com
     > 42 2 * * * root /root/MySQL-S3-Backup/mysql_s3_backup.php
     > EOF

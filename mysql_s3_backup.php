@@ -19,6 +19,10 @@ FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all i
            - but then we don't have a local copy if S3 connection dies
 FEATURE: differential backup - a diff of the changes between last dump and current dump (to reduce backup sizes)
          - but this means dependency problem plus lots of disk space
+
+TIDY:    check for presence of bucket before trying to create it
+
+FIX:     gunzip on restore is giving "trailing garbage ignored" - I think one of the processes in the pipe is outputting garbage
 */
 
 // signal handler function
@@ -229,11 +233,11 @@ foreach ($ms3b_cfg['Servers'] as $server)
         $cmd = '(set -o pipefail && '.
                 "mysqldump $mysql_args --opt --quote-names $ms3b_cfg[mysqldump_args] $other_args".escapeshellarg($d)." $table_args | ".
                 $ms3b_cfg['compressor_cmd'].' | '.
-                'gpg --encrypt --trust-model always --recipient '.$server['gpg_rcpt'].' '.
+                'gpg --encrypt --batch --trust-model always --recipient '.$server['gpg_rcpt'].' '.
                     ($server['gpg_sign'] ?
                         ('--sign '.($server['gpg_signer'] ? '--default-key '.$server['gpg_signer'].' ' : ''))
                         : '').
-                '  > $dest_file ) < /dev/null';
+                " --output $dest_file ) < /dev/null";
 
         log_notice("Running: $cmd");
 
