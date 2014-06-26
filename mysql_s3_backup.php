@@ -3,26 +3,24 @@
 
 // Based on vc-backup.pl & cb-backup.pl written by Mark Sutton, December 2011
 // Modified for PHP and extended by Ben Kennish, from November 2012 onwards
-// Awaiting contributions from Nicola Asuni, January 2013, that will sadly never come ;-(
+// No contributions by Nicola Asuni, January 2013 onwards
 
 /*
 == TODO List ==
 
 FEATURE: use s3cmd to trim old backups (using s3cmd ls and s3cmd del)
 FEATURE: option to produce a report (in XML?) listing backups and the size and time taken for backups and to upload to S3
-FEATURE: option to use mysqlhotcopy for local MyISAM backups
+FEATURE: option to use mysqlhotcopy for local MyISAM backups (beneficial when backing up from a master server)
 FEATURE: option to enable/disable gpg and to enable/disable the S3 upload (for taking backups to use in another fashion)
 FEATURE: option to create a DB dump, upload to S3, and then remove local file on a PER-DATABASE rather than per-server basis
-         + advantage: less disk space used
-         - disadvantage: if you are taking DB down with exec_pre, it'll be down for longer this way
+         + advantage: less disk space used, easier to keep track of what's been backed up and what hasn't
+         - disadvantage: if you are taking DB down with exec_pre, it'll be down for longer this way, probably takes longer overall
 FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all in one piped command
            - but then we don't have a local copy if S3 connection dies
 FEATURE: differential backup - a diff of the changes between last dump and current dump (to reduce backup sizes)
          - but this means dependency problem plus lots of disk space
 
-TIDY:    check for presence of bucket before trying to create it
-
-FIX:     gunzip on restore is giving "trailing garbage ignored" - I think one of the processes in the pipe is outputting garbage
+FIX:     somehow need to check for errors with s3cmd commands (that often provide return code 0)
 */
 
 // signal handler function
@@ -91,6 +89,49 @@ function log_notice($msg)
 
     echo $msg.PHP_EOL;
 }
+
+
+// recursively delete a directory
+function deltree($dir)
+{
+    if (empty($dir)) trigger_error('Error: empty $path supplied to deltree()', E_USER_ERROR);
+    $dir = trim($dir);
+    if (!$dir) trigger_error('Error: empty $path supplied to deltree()', E_USER_ERROR);
+
+    $dir = realpath($dir);
+    if ($dir === false)
+        trigger_error('realpath() returned false', E_USER_ERROR);
+    if (!is_dir($dir))
+        trigger_error('No such directory: '.$dir, E_USER_ERROR);
+    if ($dir == '/')
+        trigger_error('Refusing to delete the root', E_USER_ERROR);
+
+    $ls = scandir($dir);
+    if ($ls === false)
+        trigger_error('scandir() returned false', E_USER_ERROR);
+
+    $files = array_diff($ls, array('.','..'));
+    if ($files === false)
+    {
+        trigger_error('array_diff() returned false', E_USER_ERROR);
+    }
+
+    foreach ($files as $file)
+    {
+        if (is_dir("$dir/$file") && !is_link($dir))
+            deltree("$dir/$file");
+        else
+        {
+            unlink("$dir/$file")
+                or trigger_error("Failed to delete file $dir/$file", E_USER_ERROR);
+        }
+    }
+
+    rmdir($dir)
+        or trigger_error("Failed to delete directory $dir", E_USER_ERROR);
+}
+
+
 
 
 require_once(dirname(__FILE__).'/config.inc.php');
@@ -204,6 +245,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
             exec($cmd, $tables, $ret);
             if ($ret) trigger_error('exec() returned '.$ret, E_USER_ERROR);
+            pcntl_signal_dispatch();
 
             foreach ($tables as $table)
             {
@@ -249,7 +291,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
             if (unlink($dest_file))
                 trigger_error('system() call returned error code '.$ret.'. Backup file deleted. Command: '.$cmd, E_USER_WARNING);
             else
-                trigger_error('system() call returned error code '.$ret.'. Failed to delete backup file. Command: '.$cmd, E_USER_WARNING);
+                trigger_error('system() call returned error code '.$ret.'. *FAILED* to delete backup file. Command: '.$cmd, E_USER_WARNING);
         }
         else
         {
@@ -270,17 +312,25 @@ foreach ($ms3b_cfg['Servers'] as $server)
         system($server['exec_post'], $ret);
         if ($ret)
             trigger_error("Warning: exec_post returned $ret\n", E_USER_WARNING);
+        $server['exec_post'] = false;
         pcntl_signal_dispatch();
     }
-    $server['exec_post'] = false;
 
 
     // create a new bucket if necessary
-    // TODO: test for presence of bucket and only issue this if necessary
-    $cmd = 's3cmd mb s3://'.$server['s3_bucket'].' < /dev/null';
+    $cmd = 's3cmd ls s3://'.$server['s3_bucket'].' < /dev/null';
     log_notice("Running: $cmd");
-    system($cmd, $ret);
+    $ls = `$cmd`;
     pcntl_signal_dispatch();
+
+    // this test embarrasses me but s3cmd seems to always return error code 0  :(
+    if (!empty($ls) && strpos($ls, ' does not exist') !== false)
+    {
+        $cmd = 's3cmd mb s3://'.$server['s3_bucket'].' < /dev/null';
+        log_notice("Running: $cmd");
+        system($cmd, $ret);
+        pcntl_signal_dispatch();
+    }
 
     // Copy new backup dir to S3
     log_notice("Starting upload to Amazon S3 s3://$server[s3_bucket]$server[s3_dir]");
@@ -292,19 +342,14 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
     if ($ret)
     {
-        //TODO: i don't think we are ever reaching this part - I think s3cmd might never return a non-zero error code
+        // I don't think we ever reach this part - I think s3cmd never returns a non-zero error code
         trigger_error('s3cmd returned '.$ret.' - skipping delete of local files', E_USER_WARNING);
         continue; //foreach (skip local delete)
     }
 
     log_notice("S3 Upload complete. Removing backup dir ($this_backup_dir)");
 
-    // sanity check
-    if (realpath($this_backup_dir) == '/')
-        trigger_error('Refusing to wipe entire filesystem!', E_USER_ERROR);
-
-    system('rm -rf '.$this_backup_dir, $ret);
-    if ($ret) trigger_error('rm system() call returned '.$ret, E_USER_WARNING);
+    deltree($this_backup_dir);
 
     log_notice("Finished with backup of (host:'$server[host]', user:'$server[user]')...");
 }
