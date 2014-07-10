@@ -20,6 +20,8 @@ FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all i
 FEATURE: differential backup - a diff of the changes between last dump and current dump (to reduce backup sizes)
          - but this means dependency problem plus lots of disk space
 
+TIDY:    gpg does compression already. so is there really any point of using gzip at all?
+
 FIX:     somehow need to check for errors with s3cmd commands (that often provide return code 0)
 */
 
