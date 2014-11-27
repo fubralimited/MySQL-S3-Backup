@@ -322,7 +322,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
     // create a new bucket if necessary
     $cmd = 's3cmd ls s3://'.$server['s3_bucket'].' < /dev/null';
     log_notice("Running: $cmd");
-    $ls = `$cmd`;
+    $ls = `$cmd 2>&1`;
     pcntl_signal_dispatch();
 
     // this test embarrasses me but s3cmd seems to always return error code 0  :(
