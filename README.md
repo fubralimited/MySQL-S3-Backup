@@ -1,6 +1,6 @@
 # MySQL-S3-Backup
 
-A PHP script to backup MySQL databases to Amazon S3 using GnuPG (gpg) for encryption.
+A PHP script to automate the backup of MySQL databases to Amazon S3 using GnuPG (gpg) for encryption.
 
 ## Pre-requisites
 ### An Amazon S3 Account
@@ -19,13 +19,16 @@ At time of writing, the regular 'epel' repo has v1.0.1 so we need to enable the 
 
 At time of writing, this repo has s3cmd v1.5.0
 
-Then create an .s3cfg file
+Then create an .s3cfg file by running...
 
     s3cmd --configure
 
 * Specify your Access Key and Secret Key
 * Leave encryption password blank (MySQL-S3-Backup does the GPG stuff for you)
 * Use HTTPS
+
+You may wish to edit the /root/.s3cfg file to make further changes
+e.g. changing 'bucket_location' from 'US' to 'EU'
 
 ### Setup GPG ###
 
@@ -43,7 +46,9 @@ Run the interactive key generation tool, and follow the on-screen instructions:
 
     gpg --gen-key
 
-At a poit in the process, you will be told that the system need to generate entropy.
+I recommend that you name the new keys '''root@db-slave.example.com''' using whatever user and hostname you are doing the backups from.
+
+At a point in the process, you will be told that the system needs to generate entropy.
 To help speed this up, try running the following (from a different terminal) to generate entropy on the server:
 
     find / -type f | xargs grep ben_rules 2>/dev/null
@@ -97,14 +102,14 @@ Add the timezone to /etc/php.ini
 
     date.timezone = 'Europe/London'
 
-Checkout the MySQL-S3-Backup project
+Clone the MySQL-S3-Backup project from GitHub
 
     cd /root/
     git clone https://github.com/fubralimited/MySQL-S3-Backup.git
 
 Copy config.template.inc.php to config.inc.php and edit it appropriately.
-As a minimum, you will need to set values for 'gpg_rcpt' (the GPG key recipient)
-and either set 'gpg_sign' to false or set 'gpg_signer' to the name of the secret key to sign with.
+As a minimum, you will need to set values for 'gpg_rcpt' (the GPG key recipient), the S3 bucket 
+name 's3_bucket', and either set 'gpg_sign' to false or set 'gpg_signer' to the name of the secret key to sign with.
 You may also wish to list particular databases to backup in the db_where variable (default is all.)
 
     cd MySQL-S3-Backup
@@ -114,7 +119,7 @@ You may also wish to list particular databases to backup in the db_where variabl
 Ensure that mysql and mysqldump can be run without a password prompt by editing root's .my.cnf file
 
     vim /root/.my.cnf
-    chmod 700 /root/.my.cnf
+    chmod 600 /root/.my.cnf
 
 You will probably need lines like:
 
@@ -137,7 +142,7 @@ If you are happy that it worked, install it on the cron
 
 Use s3cmd to download the backup from S3 then decrypt, unzip and import it in to MySQL.  e.g.
 
-    s3cmd get -r s3://ABCDEFGHJKLMN3OP2QRS.your.domain.example.com/mysql-backups/2013-01-21_02.42.01
+    s3cmd get -r s3://ABCDEFGHJKLMN3OP2QRS.db-slave.example.com/mysql-backups/2013-01-21_02.42.01
     cd 2013-01-21_02.42.01
     gpg --decrypt database_name.sql.gz.gpg | gunzip -c | mysql database_name
 
@@ -146,7 +151,7 @@ import it into the MySQL server. The database should exist already. If it does n
 
     mysqladmin create database_name
 
-If you have any further questions/suggestions/whatever, feel free to email me (ben@fubra.com).
+If you have any further questions/suggestions/whatever, feel free to email me (ben@catn.com).
 
 Thanks.
 Ben

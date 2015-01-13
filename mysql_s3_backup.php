@@ -2,8 +2,8 @@
 <?php
 
 // Based on vc-backup.pl & cb-backup.pl written by Mark Sutton, December 2011
-// Modified for PHP and extended by Ben Kennish, from November 2012 onwards
-// No contributions by Nicola Asuni, January 2013 onwards
+// Converted to PHP and extended by Ben Kennish, from November 2012 onwards
+// No contributions from Nicola Asuni, January 2013 onwards
 
 /*
 == TODO List ==
