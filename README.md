@@ -123,9 +123,9 @@ Ensure that mysql and mysqldump can be run without a password prompt by editing 
 
 You will probably need lines like:
 
- [client]
- user=root
- password=y0uR_d4t4b453_p455w0rd_H3r3
+    [client]
+    user=root
+    password=y0uR_d4t4b453_p455w0rd_H3r3
 
 Try running the script!
 
