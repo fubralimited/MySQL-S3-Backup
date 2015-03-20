@@ -131,6 +131,8 @@ Try running the script!
 
     /root/MySQL-S3-Backup/mysql_s3_backup.php
 
+If s3cmd gives "Connection reset by peer" and "Broken Pipe" errors for a newly created bucket, wait a few hours (for DNS changes to propagate) and try again.  See http://www.jacobtomlinson.co.uk/2014/07/31/amazon-s3-s3cmd-put-errno-32-broken-pipe/
+
 If you are happy that it worked, install it on the cron
 
     cat <<EOF > /etc/cron.d/ms3b
