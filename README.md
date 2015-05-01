@@ -11,15 +11,13 @@ You can manage access keys here: https://console.aws.amazon.com/iam/home?#securi
 
 Amazon S3 Tools: Command Line S3 Client Software and S3 Backup (http://s3tools.org/)
 
-s3cmd is in the EPEL repo (https://fedoraproject.org/wiki/EPEL). Older versions of s3cmd
-(< 1.1.0) fail to upload backup files larger than around 5GB in size so we need 1.1.0+.
-At time of writing, the regular 'epel' repo has v1.0.1 so we need to enable the 'epel-testing' repo:
+s3cmd is in the EPEL repo (See https://fedoraproject.org/wiki/EPEL). 
 
-    yum install s3cmd --enablerepo='epel-testing'
+Once you have the EPEL repo configured for your system, run:
 
-At time of writing, this repo has s3cmd v1.5.0
+    yum install s3cmd
 
-Then create an .s3cfg file by running...
+Then create an .s3cfg file by running:
 
     s3cmd --configure
 
@@ -98,7 +96,7 @@ Install the git client, and php if necessary
 
     yum install git php-cli
 
-Add the timezone to /etc/php.ini
+Ensure a timezone is set within /etc/php.ini
 
     date.timezone = 'Europe/London'
 
