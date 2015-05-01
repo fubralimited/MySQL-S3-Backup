@@ -20,7 +20,10 @@ FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all i
 FEATURE: differential backup - a diff of the changes between last dump and current dump (to reduce backup sizes)
          - but this means dependency problem plus lots of disk space
 
-TIDY:    gpg does compression already. so is there really any point of using gzip at all?
+TIDY:    gpg does compression already. so is there really any point in using gzip at all?
+         I don't think I should worry about this for now as it means that decrypted files are still compressed which is handy
+         and also gpg automatically checks for compressed data and disables encrypt compression if it detects zip, gzip, and bz2 headers
+         see: http://www.gossamer-threads.com/lists/gnupg/users/43957
 
 FIX:     somehow need to check for errors with s3cmd commands (that often provide return code 0)
 */
