@@ -19,6 +19,7 @@ FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all i
            - but then we don't have a local copy if S3 connection dies
 FEATURE: differential backup - a diff of the changes between last dump and current dump (to reduce backup sizes)
          - but this means dependency problem plus lots of disk space
+FEATURE: a process lock file to prevent multiple copies running at the same time
 
 TIDY:    gpg does compression already. so is there really any point in using gzip at all?
          I don't think I should worry about this for now as it means that decrypted files are still compressed which is handy
