@@ -1,6 +1,8 @@
 #!/usr/bin/php
 <?php
 
+// A script to take backups of MySQL databases and upload encrypted copies to Amazon S3
+//
 // Based on vc-backup.pl & cb-backup.pl written by Mark Sutton, December 2011
 // Converted to PHP and extended by Ben Kennish, from November 2012 onwards
 // No contributions from Nicola Asuni, January 2013 onwards
@@ -19,7 +21,6 @@ FEATURE: option to use an S3 mount point rather than s3cmd so we can do it all i
            - but then we don't have a local copy if S3 connection dies
 FEATURE: differential backup - a diff of the changes between last dump and current dump (to reduce backup sizes)
          - but this means dependency problem plus lots of disk space
-FEATURE: a process lock file to prevent multiple copies running at the same time
 
 TIDY:    gpg does compression already. so is there really any point in using gzip at all?
          I don't think I should worry about this for now as it means that decrypted files are still compressed which is handy
@@ -28,6 +29,10 @@ TIDY:    gpg does compression already. so is there really any point in using gzi
 
 FIX:     somehow need to check for errors with s3cmd commands (that often provide return code 0)
 */
+
+define('LOCK_FILE', '/tmp/mysql_s3_backup.lock');
+
+
 
 // signal handler function
 function sig_handler($signo)
@@ -67,7 +72,7 @@ pcntl_signal(SIGUSR1, "sig_handler");
 
 function on_shutdown()
 {
-    global $clean_shutdown, $server;
+    global $clean_shutdown, $server, $lock_file_created;
 
     if (!$clean_shutdown)
     {
@@ -80,6 +85,15 @@ function on_shutdown()
         system($server['exec_post'], $ret);
         if ($ret)
             trigger_error("Warning: exec_post ($server[exec_post]) returned $ret", E_USER_WARNING);
+    }
+
+    if ($lock_file_created)
+    {
+        // remove lock file
+        if (!unlink(LOCK_FILE))
+        {
+            trigger_error("Failed to remove lock file (".LOCK_FILE.')', E_USER_WARNING);
+        }
     }
 
     log_notice('on_shutdown() complete. Goodbye!');
@@ -143,11 +157,43 @@ function deltree($dir)
 require_once(dirname(__FILE__).'/config.inc.php');
 
 $clean_shutdown = false;
+$lock_file_created = false;
 register_shutdown_function('on_shutdown');
 
 ini_set('log_errors', 1);
 ini_set('error_log', $ms3b_cfg['log']);
 ini_set('display_errors', 1);   // display errors on STDERR
+
+
+if (file_exists(LOCK_FILE) && is_file(LOCK_FILE))
+{
+    if (is_readable(LOCK_FILE))
+    {
+        $prev_pid = trim(file_get_contents(LOCK_FILE));
+
+        // signal 0 doesn't get actually sent to a process but true will
+        // only be returned if it's possible to send the signal
+        if (($prev_pid !== false) && (posix_kill($prev_pid, 0)))
+        {
+            trigger_error("Lock file exists and points to active process. Exiting...", E_USER_WARNING);
+            exit(1);
+        }
+        log_notice("Lock file exists but doesn't point to active process. Continuing...");
+    }
+    else
+    {
+        trigger_error('Lock file ('.LOCK_FILE.') is not readable', E_USER_ERROR);
+    }
+}
+
+$my_pid = posix_getpid();
+
+if (file_put_contents(LOCK_FILE, $my_pid, LOCK_EX) === false)
+{
+    trigger_error('Failed writing PID to lock file ('.LOCK_FILE.')', E_USER_ERROR);
+}
+$lock_file_created = true;
+
 
 // paranoid mode - give no perms to group/others for any files/dirs we create
 umask(0077);
