@@ -96,6 +96,10 @@ Install the git client, and php if necessary
 
     yum install git php-cli
 
+It might be necessary to install php-process if available
+
+    yum install php-process
+
 Ensure a timezone is set within /etc/php.ini
 
     date.timezone = 'Europe/London'
