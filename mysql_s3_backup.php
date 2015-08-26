@@ -32,6 +32,12 @@ FIX:     somehow need to check for errors with s3cmd commands (that often provid
 
 define('LOCK_FILE', '/tmp/mysql_s3_backup.lock');
 
+// test whether we have Process Control support
+// see http://uk3.php.net/manual/en/book.pcntl.php
+if (function_exists('pcntl_signal'))
+    define('PCNTL_SUPPORT', true);
+else
+    define('PCNTL_SUPPORT', false);
 
 
 // signal handler function
@@ -63,12 +69,14 @@ function sig_handler($signo)
     }
 }
 
-// setup signal handlers
-pcntl_signal(SIGTERM, "sig_handler");
-pcntl_signal(SIGINT,  "sig_handler");
-pcntl_signal(SIGHUP,  "sig_handler");
-pcntl_signal(SIGUSR1, "sig_handler");
-
+if (PCNTL_SUPPORT)
+{
+    // setup signal handlers
+    pcntl_signal(SIGTERM, "sig_handler");
+    pcntl_signal(SIGINT,  "sig_handler");
+    pcntl_signal(SIGHUP,  "sig_handler");
+    pcntl_signal(SIGUSR1, "sig_handler");
+}
 
 function on_shutdown()
 {
@@ -271,7 +279,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
             // uncomment this if u don't want exec_post to run on an exec_pre failure
             //$server['exec_post'] = '';
         }
-        pcntl_signal_dispatch();
+        PCNTL_SUPPORT && pcntl_signal_dispatch();
     }
 
     //----------------------------------------------------------------------------------------
@@ -297,7 +305,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
             exec($cmd, $tables, $ret);
             if ($ret) trigger_error('exec() returned '.$ret, E_USER_ERROR);
-            pcntl_signal_dispatch();
+            PCNTL_SUPPORT && pcntl_signal_dispatch();
 
             foreach ($tables as $table)
             {
@@ -349,7 +357,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
         {
             log_notice('Pipe complete. Resulting file is '.filesize($dest_file)." bytes");
         }
-        pcntl_signal_dispatch();
+        PCNTL_SUPPORT && pcntl_signal_dispatch();
         /*
         // we used to echo ${PIPESTATUS[*]} and examine this but I think using pipefail is more elegant
         if (!preg_match('/^0( 0)*$/', $pipe_res))
@@ -365,7 +373,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
         if ($ret)
             trigger_error("Warning: exec_post returned $ret\n", E_USER_WARNING);
         $server['exec_post'] = false;
-        pcntl_signal_dispatch();
+        PCNTL_SUPPORT && pcntl_signal_dispatch();
     }
 
 
@@ -373,7 +381,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
     $cmd = 's3cmd ls s3://'.$server['s3_bucket'].' < /dev/null';
     log_notice("Running: $cmd");
     $ls = `$cmd 2>&1`;
-    pcntl_signal_dispatch();
+    PCNTL_SUPPORT && pcntl_signal_dispatch();
 
     // this test embarrasses me but s3cmd seems to always return error code 0  :(
     if (!empty($ls) && strpos($ls, ' does not exist') !== false)
@@ -381,7 +389,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
         $cmd = 's3cmd mb s3://'.$server['s3_bucket'].' < /dev/null';
         log_notice("Running: $cmd");
         system($cmd, $ret);
-        pcntl_signal_dispatch();
+        PCNTL_SUPPORT && pcntl_signal_dispatch();
     }
 
     // Copy new backup dir to S3
@@ -390,7 +398,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
     $cmd = 'cd '.$ms3b_cfg['data_dir'].' && '.$ms3b_cfg['s3_cmd'] .' --no-encrypt '.$now.' s3://'.$server['s3_bucket'].$server['s3_dir'].' < /dev/null';
     log_notice("Running: $cmd");
     system($cmd, $ret);
-    pcntl_signal_dispatch();
+    PCNTL_SUPPORT && pcntl_signal_dispatch();
 
     if ($ret)
     {
