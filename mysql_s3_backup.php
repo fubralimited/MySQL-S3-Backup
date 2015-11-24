@@ -28,6 +28,8 @@ TIDY:    gpg does compression already. so is there really any point in using gzi
          see: http://www.gossamer-threads.com/lists/gnupg/users/43957
 
 FIX:     somehow need to check for errors with s3cmd commands (that often provide return code 0)
+FIX:     multiple backups should probably use the same folder (atm they are seperate)
+FIX:     get PHP errors sent to STDERR so they appear in the cron job
 */
 
 define('LOCK_FILE', '/tmp/mysql_s3_backup.lock');
