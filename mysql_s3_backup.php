@@ -169,8 +169,21 @@ $lock_file_created = false;
 register_shutdown_function('on_shutdown');
 
 ini_set('log_errors', 1);
+ini_set('display_errors', 'stderr');   // display errors on STDERR - doesn't seem to work
+ini_set('html_errors', 0);
 ini_set('error_log', $ms3b_cfg['log']);
-ini_set('display_errors', 1);   // display errors on STDERR
+
+
+/*
+// code to test STDOUT vs STDERR output
+echo "Starting script\n";
+$STDERR = fopen('php://stderr', 'w+');
+fwrite($STDERR, "some debug info\n");
+$x = 10 / 0;
+trigger_error("Testing trigger_error()", E_USER_ERROR);
+echo "Shouldnt get here\n";
+exit;
+*/
 
 
 if (file_exists(LOCK_FILE) && is_file(LOCK_FILE))
