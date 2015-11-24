@@ -6,7 +6,7 @@
 $ms3b_cfg = array();
 
 // --continue-put is giving "ERROR: no element found: line 1, column 0" problems with current version of s3cmd
-$ms3b_cfg['s3_cmd']         = 's3cmd put --recursive --reduced-redundancy --preserve --multipart-chunk-size-mb=1024 --no-guess-mime-type';
+$ms3b_cfg['s3_cmd']         = 's3cmd put --recursive --reduced-redundancy --preserve --multipart-chunk-size-mb=100 --no-guess-mime-type';
 $ms3b_cfg['compressor_cmd'] = 'gzip -c';
 
 $ms3b_cfg['data_dir'] = $_SERVER['HOME'].'/.ms3b';
