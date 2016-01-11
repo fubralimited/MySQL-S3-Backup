@@ -363,15 +363,11 @@ foreach ($ms3b_cfg['Servers'] as $server)
 
         if ($ret)
         {
-            if (unlink($dest_file))
-                trigger_error('system() call returned error code '.$ret.'. Backup file deleted. Command: '.$cmd, E_USER_WARNING);
-            else
-                trigger_error('system() call returned error code '.$ret.'. *FAILED* to delete backup file. Command: '.$cmd, E_USER_WARNING);
+            trigger_error('system() call returned error code '.$ret.'. Command: '.$cmd, E_USER_WARNING);
         }
-        else
-        {
-            log_notice('Pipe complete. Resulting file is '.filesize($dest_file)." bytes");
-        }
+        
+        log_notice('Pipe complete. Resulting file is '.filesize($dest_file)." bytes");
+        
         PCNTL_SUPPORT && pcntl_signal_dispatch();
         /*
         // we used to echo ${PIPESTATUS[*]} and examine this but I think using pipefail is more elegant
