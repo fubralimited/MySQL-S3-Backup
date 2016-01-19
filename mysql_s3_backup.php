@@ -36,7 +36,7 @@ define('LOCK_FILE', '/tmp/mysql_s3_backup.lock');
 
 // test whether we have Process Control support
 // see http://uk3.php.net/manual/en/book.pcntl.php
-if (function_exists('pcntl_signal'))
+if (function_exists('pcntl_signal') && function_exists('pcntl_signal_dispatch'))
     define('PCNTL_SUPPORT', true);
 else
     define('PCNTL_SUPPORT', false);
