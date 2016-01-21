@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 
 // A script to take backups of MySQL databases and upload encrypted copies to Amazon S3
