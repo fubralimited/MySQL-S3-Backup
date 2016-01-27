@@ -20,7 +20,7 @@ do
    if [ -r $BACKUP_FILE ]
    then
        echo "File: $BACKUP_FILE"
-       DATABASE_NAME=$(echo $BACKUP_FILE | sed -r 's/^(.*)\.sql\.gz\.e$/\1/')
+       DATABASE_NAME=$(echo $BACKUP_FILE | sed -r 's/^(.*)\.sql\.gz\.gpg$/\1/')
        echo "Database: $DATABASE_NAME"
 
        echo "Creating database..."
