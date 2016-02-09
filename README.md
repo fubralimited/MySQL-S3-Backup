@@ -44,7 +44,7 @@ Run the interactive key generation tool, and follow the on-screen instructions:
 
     gpg --gen-key
 
-I recommend that you name the new keys '''root@db-slave.example.com''' using whatever user and hostname you are doing the backups from.
+I recommend that give the new keys the name and email address of '''root@db-slave.example.com''' using whatever user and hostname you are doing the backups from.
 
 At a point in the process, you will be told that the system needs to generate entropy.
 To help speed this up, try running the following (from a different terminal) to generate entropy on the server:
