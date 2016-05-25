@@ -17,11 +17,11 @@ $i = 0;
 
 // server 1
 $ms3b_cfg['Servers'][$i]['host']      = '';  // if any of these three are undefined
-$ms3b_cfg['Servers'][$i]['user']      = '';	 // mysql and mysqldump will use the values in /etc/my.cnf
-$ms3b_cfg['Servers'][$i]['password']  = '';  // and /root/.my.cnf
+$ms3b_cfg['Servers'][$i]['user']      = '';  // mysql and mysqldump will use the values in /etc/my.cnf
+$ms3b_cfg['Servers'][$i]['password']  = '';  // and ~/.my.cnf
 $ms3b_cfg['Servers'][$i]['db_where']  = '`Database` NOT LIKE "information_schema" AND `Database` NOT LIKE "performance_schema" AND `Database` NOT LIKE "#mysql50#%"';
 //$ms3b_cfg['Servers'][$i]['tables_where']['database_name'] = '`Tables_in_database_name` NOT LIKE "temp_%"';
-$ms3b_cfg['Servers'][$i]['s3_bucket'] = 'ABCDEFGHIJKLMNOP.'.trim(`/bin/hostname`).'/';
+$ms3b_cfg['Servers'][$i]['s3_bucket'] = 'ms3b.example.com/';
 $ms3b_cfg['Servers'][$i]['s3_dir']    = 'mysql-backups/';
 $ms3b_cfg['Servers'][$i]['gpg_rcpt']  = 'backups@example.com';
 $ms3b_cfg['Servers'][$i]['gpg_sign']  = true;
