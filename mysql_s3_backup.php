@@ -406,7 +406,7 @@ foreach ($ms3b_cfg['Servers'] as $server)
     // Copy new backup dir to S3
     log_notice("Starting upload to Amazon S3 s3://$server[s3_bucket]$server[s3_dir]");
 
-    $cmd = 'cd '.$ms3b_cfg['data_dir'].' && '.$ms3b_cfg['s3_cmd'] .' --no-encrypt '.$now.' s3://'.$server['s3_bucket'].$server['s3_dir'].' < /dev/null';
+    $cmd = 'cd '.$ms3b_cfg['data_dir'].' && '.$ms3b_cfg['s3_cmd'] .' --no-encrypt --no-progress '.$now.' s3://'.$server['s3_bucket'].$server['s3_dir'].' < /dev/null';
     log_notice("Running: $cmd");
     system($cmd, $ret);
     PCNTL_SUPPORT && pcntl_signal_dispatch();
